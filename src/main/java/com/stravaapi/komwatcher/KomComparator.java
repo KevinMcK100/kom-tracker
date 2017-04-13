@@ -14,15 +14,15 @@ public class KomComparator {
 		this.existingKoms = existingKoms;
 		this.currentKoms = currentKoms;
 	}
-	
+
 	public List<StravaSegmentEffort> getKomsLost() {
 		
-		return compareKoms(existingKoms, currentKoms);
+		return compareKoms(currentKoms, existingKoms);
 	}
 	
 	public List<StravaSegmentEffort> getKomsGained() {
 		
-		return compareKoms(currentKoms, existingKoms);
+		return compareKoms(existingKoms, currentKoms);
 	}
 	
 	/**
@@ -33,9 +33,18 @@ public class KomComparator {
 		List<StravaSegmentEffort> diffList = new ArrayList<StravaSegmentEffort>();
 		
 		// If any KOMs are in the base list but not in the secondary list, add them to a new differential list
-		for(StravaSegmentEffort baseKom : baseList) {
-			if(!secondaryList.contains(baseKom)) {
-				diffList.add(baseKom);
+		for(StravaSegmentEffort secondaryListItem : secondaryList) {
+			boolean containsId = false;
+			int secondaryItemId = secondaryListItem.getSegment().getId();
+			for(StravaSegmentEffort baseListItem : baseList) {
+				int baseListId = baseListItem.getSegment().getId();
+				if(secondaryItemId == baseListId) {
+					containsId = true;
+					break;
+				}
+			}
+			if(!containsId) {
+				diffList.add(secondaryListItem);
 			}
 		}
 		
@@ -57,5 +66,4 @@ public class KomComparator {
 	public void setCurrentKoms(List<StravaSegmentEffort> currentKoms) {
 		this.currentKoms = currentKoms;
 	}
-
 }

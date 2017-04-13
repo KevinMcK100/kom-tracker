@@ -17,8 +17,6 @@ import com.github.mustachejava.MustacheFactory;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import com.stravaapi.komwatcher.config.EmailConfig;
-import com.stravaapi.komwatcher.config.GeneralConfig;
 import com.stravaapi.komwatcher.models.Subscriber;
 import com.stravaapi.komwatcher.models.email.EmailContent;
 import com.stravaapi.komwatcher.models.email.EmailType;
@@ -31,9 +29,9 @@ public class KomWatcherImpl {
 	
 	final static Logger logger = Logger.getLogger(KomWatcherImpl.class);
 	
-	private String subscribersFile;
+	private File subscribersFile;
 	
-	public KomWatcherImpl(String subscribersFile) {
+	public KomWatcherImpl(File subscribersFile) {
 		this.subscribersFile = subscribersFile;
 	}
 
@@ -47,14 +45,21 @@ public class KomWatcherImpl {
 			
 			//Retrieve list of current KOMs from Strava
 			List<StravaSegmentEffort> currentKoms = getAthleteKoms(subscriber);
-			logger.debug("Current list of KOMs:");
-			currentKoms.forEach(kom -> logger.debug(kom));
+			//List<StravaSegmentEffort> currentKoms = null;
+			if(logger.isDebugEnabled()) {
+				logger.debug("Current list of KOMs:");
+				currentKoms.forEach(kom -> logger.debug(kom));
+			}
 			
 			//Attempt to create a new KOM storage file for subscriber (if it already exists it will do nothing)
 			//Example koms-123456.json
 			String currentDir = System.getProperty("user.dir");
-	    	String subscriberKomFile = currentDir + GeneralConfig.PREVIOUS_KOMS_FOLDER + GeneralConfig.PREVIOUS_KOMS_PREFIX + 
-	    			subscriber.getAthleteId() + GeneralConfig.PREVIOUS_KOMS_SUFFIX;
+	    	String subscriberKomFile = currentDir + 
+	    			SystemProperties.getPropertyAsString(PropertiesConstants.PREVIOUS_KOMS_FOLDER) + 
+	    			SystemProperties.getPropertyAsString(PropertiesConstants.PREVIOUS_KOMS_PREFIX) + 
+	    			subscriber.getAthleteId() + 
+	    			SystemProperties.getPropertyAsString(PropertiesConstants.PREVIOUS_KOMS_SUFFIX);
+	    	
 	    	File komFile = new File(subscriberKomFile);
 	    	//If there are no previous KOMs saved then create new file, save currently list of KOMs and terminate execution for this subscriber
 	    	try {
@@ -66,8 +71,10 @@ public class KomWatcherImpl {
 				} else { //File does exist
 					//Retrieve list of KOMs from previous time of checking - Read file operation					
 					List<StravaSegmentEffort> existingKoms = FileUtils.readJsonListFromFile(subscriberKomFile, StravaSegmentEffort.class);
-					logger.debug("List of pervious KOMs:");
-					existingKoms.forEach(kom -> logger.debug(kom));
+					if(logger.isDebugEnabled()) {
+						logger.debug("List of pervious KOMs:");
+						existingKoms.forEach(kom -> logger.debug(kom));
+					}
 					
 					//Perform comparison
 					KomComparator komComparator = new KomComparator(existingKoms, currentKoms);
@@ -87,7 +94,8 @@ public class KomWatcherImpl {
 							List<Segment> segmentDetails = getSegmentDetailsForEmail(komsGained);
 							EmailContent email = new EmailContent(subscriber.getAthleteName(), segmentDetails, EmailType.KOM_GAINED);
 							String renderedHtml = getRenderedHtml(email);
-							emailService.sendEmail(EmailConfig.KOM_GAINED_SUBJECT, renderedHtml, subscriber.getEmailAddress());
+							emailService.sendEmail(SystemProperties.getPropertyAsString(PropertiesConstants.KOM_GAINED_SUBJECT), 
+									renderedHtml, subscriber.getEmailAddress());
 						}
 						//Send email for KOMs lost
 						if(!komsLost.isEmpty()) {
@@ -95,7 +103,8 @@ public class KomWatcherImpl {
 							List<Segment> segmentDetails = getSegmentDetailsForEmail(komsLost);
 							EmailContent email = new EmailContent(subscriber.getAthleteName(), segmentDetails, EmailType.KOM_LOST);
 							String renderedHtml = getRenderedHtml(email);
-							emailService.sendEmail(EmailConfig.KOM_LOST_SUBJECT, renderedHtml, subscriber.getEmailAddress());
+							emailService.sendEmail(SystemProperties.getPropertyAsString(PropertiesConstants.KOM_LOST_SUBJECT), 
+									renderedHtml, subscriber.getEmailAddress());
 						}
 						//Write new list of current KOMs to file
 						logger.info("Writing list of current KOMs to " + subscriberKomFile);
@@ -128,7 +137,7 @@ public class KomWatcherImpl {
 		List<Segment> segmentUrls = new ArrayList<Segment>();
 		for(StravaSegmentEffort kom : koms) {
 			String segmentId = String.valueOf(kom.getSegment().getId());
-			String fullUrl = EmailConfig.SEGMENT_BASE_URL + segmentId;
+			String fullUrl = SystemProperties.getPropertyAsString(PropertiesConstants.SEGMENT_BASE_URL) + segmentId;
 			segmentUrls.add(new Segment(kom.getName(), fullUrl));
 			logger.info("Segment name: " + kom.getName() + " Segment Id: " + kom.getSegment().getId() + "Segment URL: " + fullUrl);
 		}
@@ -139,11 +148,11 @@ public class KomWatcherImpl {
 	private String getRenderedHtml(EmailContent email) {
 		
 		MustacheFactory mustacheFactory = new DefaultMustacheFactory();
-		Mustache mustache = mustacheFactory.compile(EmailConfig.MUSTACHE_TEMPLATE);
+		Mustache mustache = mustacheFactory.compile(SystemProperties.getPropertyAsString(PropertiesConstants.MUSTACHE_TEMPLATE));
 		StringWriter stringWriter = new StringWriter();
 		List<Object> mustacheObjects = new ArrayList<Object>();
 		mustacheObjects.add(email);
-		String poweredByStravaImage = EmailConfig.POWERED_BY_STRAVA_IMAGE;
+		String poweredByStravaImage = SystemProperties.getPropertyAsString(PropertiesConstants.POWERED_BY_STRAVA_IMAGE);
 		mustacheObjects.add(poweredByStravaImage);
 		mustache.execute(stringWriter, mustacheObjects);
 		String htmlContent = stringWriter.toString();
@@ -158,11 +167,11 @@ public class KomWatcherImpl {
 		return athleteKoms;
 	}
 
-	public String getSubscribersFile() {
+	public File getSubscribersFile() {
 		return subscribersFile;
 	}
 
-	public void setSubscribersFile(String subscribersFile) {
+	public void setSubscribersFile(File subscribersFile) {
 		this.subscribersFile = subscribersFile;
 	}
 }

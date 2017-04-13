@@ -2,8 +2,6 @@ package com.stravaapi.komwatcher;
 
 import java.util.List;
 
-import com.stravaapi.komwatcher.config.GeneralConfig;
-
 import javastrava.api.v3.auth.AuthorisationService;
 import javastrava.api.v3.auth.impl.retrofit.AuthorisationServiceImpl;
 import javastrava.api.v3.auth.model.Token;
@@ -30,7 +28,9 @@ public class StravaApiClient {
 		
 		Token token = new Token();
 		AuthorisationService service = new AuthorisationServiceImpl();
-		token = service.tokenExchange(GeneralConfig.CLIENT_ID, GeneralConfig.CLIENT_SECRET, GeneralConfig.AUTHORIZATION_CODE);
+		token = service.tokenExchange(SystemProperties.getPropertyAsInteger(PropertiesConstants.CLIENT_ID), 
+				SystemProperties.getPropertyAsString(PropertiesConstants.CLIENT_SECRET), 
+				SystemProperties.getPropertyAsString(PropertiesConstants.AUTHORIZATION_CODE));
 		
 		return token;
 	}

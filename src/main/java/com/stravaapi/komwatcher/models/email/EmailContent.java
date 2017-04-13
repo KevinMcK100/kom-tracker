@@ -2,7 +2,8 @@ package com.stravaapi.komwatcher.models.email;
 
 import java.util.List;
 
-import com.stravaapi.komwatcher.config.EmailConfig;
+import com.stravaapi.komwatcher.PropertiesConstants;
+import com.stravaapi.komwatcher.SystemProperties;
 
 public class EmailContent {
 	
@@ -21,9 +22,14 @@ public class EmailContent {
 		this.emailType = emailType;
 		this.segmentCount = segments.size();
 		this.isSingleKom = (segmentCount == 1) ? true : false;
-		this.poweredByStravaImage = EmailConfig.POWERED_BY_STRAVA_IMAGE;
-		this.poweredByStravaImageUrlLink = EmailConfig.POWERED_BY_STRAVA_IMAGE_URL_LINK;
-		this.mainEmailBody = (emailType.equals(EmailType.KOM_GAINED)) ? EmailConfig.KOM_GAINED_BODY : EmailConfig.KOM_LOST_BODY;
+		this.poweredByStravaImage = SystemProperties.getPropertyAsString(PropertiesConstants.POWERED_BY_STRAVA_IMAGE);
+		this.poweredByStravaImageUrlLink = SystemProperties.getPropertyAsString(PropertiesConstants.POWERED_BY_STRAVA_IMAGE_URL_LINK);
+		
+		if(emailType.equals(EmailType.KOM_GAINED)) {
+			this.mainEmailBody = SystemProperties.getPropertyAsString(PropertiesConstants.KOM_GAINED_BODY);
+		} else {
+			this.mainEmailBody = SystemProperties.getPropertyAsString(PropertiesConstants.KOM_LOST_BODY);
+		}
 	}
 
 	public String getSubscriberName() {
