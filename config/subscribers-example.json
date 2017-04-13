@@ -1,0 +1,12 @@
+[
+	{
+		"athleteId": 1234567,
+		"athleteName": "Joe",
+		"emailAddress": "joe.bloggs@gmail.com"
+	},
+	{
+		"athleteId": 7654321,
+		"athleteName": "Peter",
+		"emailAddress": "peter.bloggs@gmail.com"
+	}
+]
