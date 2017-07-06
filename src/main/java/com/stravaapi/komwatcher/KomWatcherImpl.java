@@ -61,7 +61,7 @@ public class KomWatcherImpl {
 	    			SystemProperties.getPropertyAsString(PropertiesConstants.PREVIOUS_KOMS_SUFFIX);
 	    	
 	    	File komFile = new File(subscriberKomFile);
-	    	//If there are no previous KOMs saved then create new file, save currently list of KOMs and terminate execution for this subscriber
+	    	//If there are no previous KOMs saved then create new file, save current list of KOMs and terminate execution for this subscriber
 	    	try {
 				if(komFile.createNewFile()) { //File doesn't exist
 					//Write current list of KOMs to new file just created
